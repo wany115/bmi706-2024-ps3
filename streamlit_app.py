@@ -4,38 +4,40 @@ import streamlit as st
 
 ### P1.2 ###
 
-# Move this code into `load_data` function {{
-cancer_df = pd.read_csv("https://raw.githubusercontent.com/hms-dbmi/bmi706-2022/main/cancer_data/cancer_ICD10.csv").melt(  # type: ignore
-    id_vars=["Country", "Year", "Cancer", "Sex"],
-    var_name="Age",
-    value_name="Deaths",
-)
-
-pop_df = pd.read_csv("https://raw.githubusercontent.com/hms-dbmi/bmi706-2022/main/cancer_data/population.csv").melt(  # type: ignore
-    id_vars=["Country", "Year", "Sex"],
-    var_name="Age",
-    value_name="Pop",
-)
-
-df = pd.merge(left=cancer_df, right=pop_df, how="left")
-df["Pop"] = df.groupby(["Country", "Sex", "Age"])["Pop"].fillna(method="bfill")
-df.dropna(inplace=True)
-
-df = df.groupby(["Country", "Year", "Cancer", "Age", "Sex"]).sum().reset_index()
-df["Rate"] = df["Deaths"] / df["Pop"] * 100_000
-
-# }}
-
-
 @st.cache
 def load_data():
-    ## {{ CODE HERE }} ##
-    df = ...  # remove this line
+    # Load cancer data and population data
+    cancer_df = pd.read_csv("https://raw.githubusercontent.com/hms-dbmi/bmi706-2022/main/cancer_data/cancer_ICD10.csv").melt(  # type: ignore
+        id_vars=["Country", "Year", "Cancer", "Sex"],
+        var_name="Age",
+        value_name="Deaths",
+    )
+
+    pop_df = pd.read_csv("https://raw.githubusercontent.com/hms-dbmi/bmi706-2022/main/cancer_data/population.csv").melt(  # type: ignore
+        id_vars=["Country", "Year", "Sex"],
+        var_name="Age",
+        value_name="Pop",
+    )
+
+    # Merge the cancer and population data
+    df = pd.merge(left=cancer_df, right=pop_df, how="left")
+
+    # Fill missing population values by backfilling, grouped by Country, Sex, and Age
+    df["Pop"] = df.groupby(["Country", "Sex", "Age"])["Pop"].fillna(method="bfill")
+
+    # Drop any remaining rows with missing data
+    df.dropna(inplace=True)
+
+    # Group by relevant columns and sum the Deaths and Pop values
+    df = df.groupby(["Country", "Year", "Cancer", "Age", "Sex"]).sum().reset_index()
+
+    # Calculate the cancer mortality rate per 100,000 population
+    df["Rate"] = df["Deaths"] / df["Pop"] * 100_000
+
     return df
 
 
-# Uncomment the next line when finished
-# df = load_data()
+df = load_data()
 
 ### P1.2 ###
 
