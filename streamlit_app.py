@@ -128,13 +128,13 @@ population_bar = alt.Chart(subset).mark_bar().encode(
     tooltip=[alt.Tooltip('Country'), alt.Tooltip('sum(Pop):Q', title='Total Population')]
 ).transform_filter(click).properties(title="Population by country for selected age group", height=300)
 
-### Existing bar chart code for total population by country
-population_total = alt.Chart(df).mark_bar().encode(
-    x=alt.X("Pop:Q", title="Sum of population size"),
-    y=alt.Y("Country:O", sort='-x'),
-    tooltip=[alt.Tooltip('Country'), alt.Tooltip('Pop:Q', title='Sum of population size')]
+age_distribution = alt.Chart(df).mark_bar().encode(
+    x=alt.X('sum(Pop):Q', stack='normalize', title='Population Distribution'),
+    y=alt.Y('Country:N', sort='-x'),
+    color=alt.Color('Age:N', legend=alt.Legend(title="Age Groups")),
+    tooltip=[alt.Tooltip('Country'), alt.Tooltip('Age'), alt.Tooltip('sum(Pop):Q', title='Population')]
 ).properties(
-    title="Sum of population size by country",
+    title="Age Distribution by Country",
     height=300
 )
 
@@ -142,12 +142,10 @@ population_total = alt.Chart(df).mark_bar().encode(
 if subset.empty:
     st.error("No data available for the given selection.")
 else:
-    combined_chart = alt.vconcat(heatmap, population_bar, population_total)
+    combined_chart = alt.vconcat(heatmap, population_bar, age_distribution)
     st.altair_chart(combined_chart, use_container_width=True)
 
 ### P2.5 ###
-
-st.altair_chart(combined_chart, use_container_width=True)
 
 countries_in_subset = subset["Country"].unique()
 if len(countries_in_subset) != len(countries):
