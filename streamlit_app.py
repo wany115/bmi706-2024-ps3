@@ -46,37 +46,60 @@ st.write("## Age-specific cancer mortality rates")
 
 ### P2.1 ###
 # replace with st.slider
-year = 2012
+min_year = int(df["Year"].min())
+max_year = int(df["Year"].max())
+
+year = st.slider("Select Year", min_year, max_year, min_year)
+
 subset = df[df["Year"] == year]
+
 ### P2.1 ###
 
 
 ### P2.2 ###
 # replace with st.radio
-sex = "M"
+sex = st.radio("Select Sex", options=["M", "F"], index=0)  # Default to "M"
+
+# Further filter the dataset based on the selected sex
 subset = subset[subset["Sex"] == sex]
+### P2.2 ###
+
+# Display the filtered subset
+st.write(subset)
 ### P2.2 ###
 
 
 ### P2.3 ###
 # replace with st.multiselect
 # (hint: can use current hard-coded values below as as `default` for selector)
-countries = [
-    "Austria",
-    "Germany",
-    "Iceland",
-    "Spain",
-    "Sweden",
-    "Thailand",
-    "Turkey",
-]
+available_countries = df["Country"].unique().tolist()
+countries = st.multiselect(
+    "Select Countries", 
+    options=available_countries, 
+    default=[
+        "Austria",
+        "Germany",
+        "Iceland",
+        "Spain",
+        "Sweden",
+        "Thailand",
+        "Turkey"
+    ]
+)
+
 subset = subset[subset["Country"].isin(countries)]
 ### P2.3 ###
 
 
 ### P2.4 ###
 # replace with st.selectbox
-cancer = "Malignant neoplasm of stomach"
+available_cancers = df["Cancer"].unique().tolist()
+cancer = st.selectbox(
+    "Select Cancer Type", 
+    options=available_cancers, 
+    index=available_cancers.index("Malignant neoplasm of stomach")
+)
+
 subset = subset[subset["Cancer"] == cancer]
 ### P2.4 ###
 
@@ -93,17 +116,55 @@ ages = [
     "Age >64",
 ]
 
-chart = alt.Chart(subset).mark_bar().encode(
+click = alt.selection_multi(fields=['Age'], bind='legend')
+
+# Heatmap with selection
+heatmap = alt.Chart(subset).mark_rect().encode(
     x=alt.X("Age", sort=ages),
-    y=alt.Y("Rate", title="Mortality rate per 100k"),
-    color="Country",
-    tooltip=["Rate"],
+    y=alt.Y("Country", title="Country"),
+    color=alt.Color(
+        "Rate",
+        scale=alt.Scale(type="log", domain=[0.01, 1000], clamp=True),
+        title="Mortality rate per 100k"
+    ),
+    tooltip=[alt.Tooltip('Country'), alt.Tooltip('Age'), alt.Tooltip('Rate', title='Mortality rate per 100k')]
+).add_selection(
+    click  # Add interactive selection
 ).properties(
     title=f"{cancer} mortality rates for {'males' if sex == 'M' else 'females'} in {year}",
+    height=300
 )
+
+# Bar chart for the sum of population, filtered by selected age
+population_bar = alt.Chart(subset).mark_bar().encode(
+    x=alt.X('sum(Pop):Q', title='Total Population'),
+    y=alt.Y('Country:N', sort='-x'),
+    tooltip=[alt.Tooltip('Country'), alt.Tooltip('sum(Pop):Q', title='Total Population')]
+).transform_filter(
+    click  # Filter to display only data for selected age groups
+).properties(
+    title="Population by country for selected age group",
+    height=300
+)
+
+# Existing bar chart code for total population by country
+population_total = alt.Chart(population_data).mark_bar().encode(
+    x=alt.X("Pop:Q", title="Sum of population size"),
+    y=alt.Y("Country:O", sort='-x'),
+    tooltip=[alt.Tooltip('Country'), alt.Tooltip('Pop:Q', title='Sum of population size')]
+).properties(
+    title="Sum of population size by country",
+    height=300
+)
+
+# Combine all charts vertically
+combined_chart = alt.vconcat(heatmap, population_bar, population_total)
+
+# Display the chart in Streamlit
+st.altair_chart(combined_chart, use_container_width=True)
 ### P2.5 ###
 
-st.altair_chart(chart, use_container_width=True)
+st.altair_chart(combined_chart, use_container_width=True)
 
 countries_in_subset = subset["Country"].unique()
 if len(countries_in_subset) != len(countries):
