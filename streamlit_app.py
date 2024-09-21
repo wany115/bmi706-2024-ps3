@@ -120,7 +120,7 @@ click = alt.selection_multi(fields=['Age'], bind='legend')
 
 ### Heatmap
 heatmap = alt.Chart(subset).mark_rect().encode(
-    x=alt.X("Age", sort=ages),
+    x=alt.X("Age", sort=ages),  # Use 'Age' to match the dataframe column, sort by the defined 'ages' list
     y=alt.Y("Country", title="Country"),
     color=alt.Color("Rate", scale=alt.Scale(type="log", domain=[0.01, 1000], clamp=True), title="Mortality rate per 100k"),
     tooltip=[alt.Tooltip('Country'), alt.Tooltip('Age'), alt.Tooltip('Rate', title='Mortality rate per 100k')]
@@ -139,6 +139,7 @@ if subset.empty:
 else:
     combined_chart = alt.vconcat(heatmap, population_bar)
     st.altair_chart(combined_chart, use_container_width=True)
+
 ### P2.5 ###
 
 st.altair_chart(combined_chart, use_container_width=True)
@@ -146,7 +147,7 @@ st.altair_chart(combined_chart, use_container_width=True)
 countries_in_subset = subset["Country"].unique()
 if len(countries_in_subset) != len(countries):
     if len(countries_in_subset) == 0:
-        st.write("No data avaiable for given subset.")
+        st.write("No data available for given subset.")
     else:
         missing = set(countries) - set(countries_in_subset)
         st.write("No data available for " + ", ".join(missing) + ".")
