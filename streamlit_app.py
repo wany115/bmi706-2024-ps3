@@ -64,11 +64,6 @@ sex = st.radio("Select Sex", options=["M", "F"], index=0)  # Default to "M"
 subset = subset[subset["Sex"] == sex]
 ### P2.2 ###
 
-# Display the filtered subset
-st.write(subset)
-### P2.2 ###
-
-
 ### P2.3 ###
 # replace with st.multiselect
 # (hint: can use current hard-coded values below as as `default` for selector)
@@ -133,11 +128,21 @@ population_bar = alt.Chart(subset).mark_bar().encode(
     tooltip=[alt.Tooltip('Country'), alt.Tooltip('sum(Pop):Q', title='Total Population')]
 ).transform_filter(click).properties(title="Population by country for selected age group", height=300)
 
+### Existing bar chart code for total population by country
+population_total = alt.Chart(df).mark_bar().encode(
+    x=alt.X("Pop:Q", title="Sum of population size"),
+    y=alt.Y("Country:O", sort='-x'),
+    tooltip=[alt.Tooltip('Country'), alt.Tooltip('Pop:Q', title='Sum of population size')]
+).properties(
+    title="Sum of population size by country",
+    height=300
+)
+
 ### Handle case where no data is selected
 if subset.empty:
     st.error("No data available for the given selection.")
 else:
-    combined_chart = alt.vconcat(heatmap, population_bar)
+    combined_chart = alt.vconcat(heatmap, population_bar, population_total)
     st.altair_chart(combined_chart, use_container_width=True)
 
 ### P2.5 ###
