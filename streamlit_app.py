@@ -118,50 +118,27 @@ ages = [
 
 click = alt.selection_multi(fields=['Age'], bind='legend')
 
-# Heatmap with selection
+### Heatmap
 heatmap = alt.Chart(subset).mark_rect().encode(
     x=alt.X("Age", sort=ages),
     y=alt.Y("Country", title="Country"),
-    color=alt.Color(
-        "Rate",
-        scale=alt.Scale(type="log", domain=[0.01, 1000], clamp=True),
-        title="Mortality rate per 100k"
-    ),
+    color=alt.Color("Rate", scale=alt.Scale(type="log", domain=[0.01, 1000], clamp=True), title="Mortality rate per 100k"),
     tooltip=[alt.Tooltip('Country'), alt.Tooltip('Age'), alt.Tooltip('Rate', title='Mortality rate per 100k')]
-).add_selection(
-    click  # Add interactive selection
-).properties(
-    title=f"{cancer} mortality rates for {'males' if sex == 'M' else 'females'} in {year}",
-    height=300
-)
+).add_selection(click).properties(title=f"{cancer} mortality rates for {'males' if sex == 'M' else 'females'} in {year}", height=300)
 
-# Bar chart for the sum of population, filtered by selected age
+### Population Bar Chart
 population_bar = alt.Chart(subset).mark_bar().encode(
     x=alt.X('sum(Pop):Q', title='Total Population'),
     y=alt.Y('Country:N', sort='-x'),
     tooltip=[alt.Tooltip('Country'), alt.Tooltip('sum(Pop):Q', title='Total Population')]
-).transform_filter(
-    click  # Filter to display only data for selected age groups
-).properties(
-    title="Population by country for selected age group",
-    height=300
-)
+).transform_filter(click).properties(title="Population by country for selected age group", height=300)
 
-# Existing bar chart code for total population by country
-population_total = alt.Chart(df).mark_bar().encode(
-    x=alt.X("Pop:Q", title="Sum of population size"),
-    y=alt.Y("Country:O", sort='-x'),
-    tooltip=[alt.Tooltip('Country'), alt.Tooltip('Pop:Q', title='Sum of population size')]
-).properties(
-    title="Sum of population size by country",
-    height=300
-)
-
-# Combine all charts vertically
-combined_chart = alt.vconcat(heatmap, population_bar, population_total)
-
-# Display the chart in Streamlit
-st.altair_chart(combined_chart, use_container_width=True)
+### Handle case where no data is selected
+if subset.empty:
+    st.error("No data available for the given selection.")
+else:
+    combined_chart = alt.vconcat(heatmap, population_bar)
+    st.altair_chart(combined_chart, use_container_width=True)
 ### P2.5 ###
 
 st.altair_chart(combined_chart, use_container_width=True)
