@@ -148,7 +148,7 @@ population_bar = alt.Chart(subset).mark_bar().encode(
 )
 
 # Existing bar chart code for total population by country
-population_total = alt.Chart(population_data).mark_bar().encode(
+population_total = alt.Chart(df).mark_bar().encode(
     x=alt.X("Pop:Q", title="Sum of population size"),
     y=alt.Y("Country:O", sort='-x'),
     tooltip=[alt.Tooltip('Country'), alt.Tooltip('Pop:Q', title='Sum of population size')]
