@@ -128,11 +128,15 @@ population_bar = alt.Chart(subset).mark_bar().encode(
     tooltip=[alt.Tooltip('Country'), alt.Tooltip('sum(Pop):Q', title='Total Population')]
 ).transform_filter(click).properties(title="Population by country for selected age group", height=300)
 
-age_distribution = alt.Chart(df).mark_bar().encode(
-    x=alt.X('sum(Pop):Q', stack='normalize', title='Population Distribution'),
-    y=alt.Y('Country:N', sort='-x'),
-    color=alt.Color('Age:N', legend=alt.Legend(title="Age Groups")),
-    tooltip=[alt.Tooltip('Country'), alt.Tooltip('Age'), alt.Tooltip('sum(Pop):Q', title='Population')]
+age_distribution = alt.Chart(subset).mark_bar().encode(
+    x=alt.X('sum(Pop):Q', stack='normalize', title='Population Distribution (%)'),
+    y=alt.Y('Country:N', sort='-x', title='Country'),
+    color=alt.Color('Age:N', legend=alt.Legend(title="Age Groups"), scale=alt.Scale(scheme='category10')),
+    tooltip=[
+        alt.Tooltip('Country:N', title='Country'),
+        alt.Tooltip('Age:N', title='Age Group'),
+        alt.Tooltip('sum(Pop):Q', title='Population', format=',')
+    ]
 ).properties(
     title="Age Distribution by Country",
     height=300
