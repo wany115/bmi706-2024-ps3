@@ -113,40 +113,37 @@ ages = [
 
 click = alt.selection_multi(fields=['Age'], bind='legend')
 
-### Heatmap
-heatmap = alt.Chart(subset).mark_rect().encode(
-    x=alt.X("Age", sort=ages),  # Use 'Age' to match the dataframe column, sort by the defined 'ages' list
-    y=alt.Y("Country", title="Country"),
-    color=alt.Color("Rate", scale=alt.Scale(type="log", domain=[0.01, 1000], clamp=True), title="Mortality rate per 100k"),
-    tooltip=[alt.Tooltip('Country'), alt.Tooltip('Age'), alt.Tooltip('Rate', title='Mortality rate per 100k')]
-).add_selection(click).properties(title=f"{cancer} mortality rates for {'males' if sex == 'M' else 'females'} in {year}", height=300)
-
-### Population Bar Chart
-population_bar = alt.Chart(subset).mark_bar().encode(
-    x=alt.X('sum(Pop):Q', title='Total Population'),
-    y=alt.Y('Country:N', sort='-x'),
-    tooltip=[alt.Tooltip('Country'), alt.Tooltip('sum(Pop):Q', title='Total Population')]
-).transform_filter(click).properties(title="Population by country for selected age group", height=300)
-
-age_distribution = alt.Chart(subset).mark_bar().encode(
-    x=alt.X('sum(Pop):Q', stack='normalize', title='Population Distribution (%)'),
-    y=alt.Y('Country:N', sort='-x', title='Country'),
-    color=alt.Color('Age:N', legend=alt.Legend(title="Age Groups"), scale=alt.Scale(scheme='category10')),
-    tooltip=[
-        alt.Tooltip('Country:N', title='Country'),
-        alt.Tooltip('Age:N', title='Age Group'),
-        alt.Tooltip('sum(Pop):Q', title='Population', format=',')
-    ]
-).properties(
-    title="Age Distribution by Country",
-    height=300
-)
-
-### Handle case where no data is selected
+# Check if data is available for the selected filters
 if subset.empty:
     st.error("No data available for the given selection.")
 else:
+    ### Heatmap: Mortality rate by country and age group
+    heatmap = alt.Chart(subset).mark_rect().encode(
+        x=alt.X("Age", sort=["Age <5", "Age 5-14", "Age 15-24", "Age 25-34", "Age 35-44", "Age 45-54", "Age 55-64", "Age >64"]),
+        y=alt.Y("Country", title="Country"),
+        color=alt.Color("Rate", scale=alt.Scale(type="log", domain=[0.01, 1000], clamp=True), title="Mortality rate per 100k"),
+        tooltip=[alt.Tooltip('Country'), alt.Tooltip('Age'), alt.Tooltip('Rate', title='Mortality rate per 100k')]
+    ).properties(title=f"{cancer} mortality rates for {sex} in {year}", height=300)
+
+    ### Population Bar Chart: Total population by country for the selected age group
+    population_bar = alt.Chart(subset).mark_bar().encode(
+        x=alt.X('sum(Pop):Q', title='Total Population'),
+        y=alt.Y('Country:N', sort='-x'),
+        tooltip=[alt.Tooltip('Country'), alt.Tooltip('sum(Pop):Q', title='Total Population')]
+    ).properties(title="Total Population by Country", height=300)
+
+    ### Age Distribution: Population distribution across age groups by country
+    age_distribution = alt.Chart(subset).mark_bar().encode(
+        x=alt.X('sum(Pop):Q', stack='normalize', title='Population Distribution (%)'),
+        y=alt.Y('Country:N', sort='-x', title='Country'),
+        color=alt.Color('Age:N', legend=alt.Legend(title="Age Groups")),
+        tooltip=[alt.Tooltip('Country:N'), alt.Tooltip('Age:N'), alt.Tooltip('sum(Pop):Q')]
+    ).properties(title="Age Distribution by Country", height=300)
+
+    ### Combine all charts vertically
     combined_chart = alt.vconcat(heatmap, population_bar, age_distribution)
+    
+    # Display the combined chart in Streamlit
     st.altair_chart(combined_chart, use_container_width=True)
 
 ### P2.5 ###
